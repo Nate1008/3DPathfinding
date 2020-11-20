@@ -7,13 +7,12 @@
  * 
  */
 
-
 import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.d.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui';
 
-
+//Pathfinding Algos Functions
 
 let board = [];
 let outlines = [];
@@ -22,6 +21,51 @@ const width = 1.5;
 const height = width / 2; 
 const rows = 20;
 const cols = rows;
+const startCoor = [];
+const targetCoor = [];
+const boardCoor = [];
+
+const ground = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height, width),
+    new THREE.MeshBasicMaterial({ color: 0xe1e1e1 })
+);
+
+const build = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height + 1, width),
+    new THREE.MeshBasicMaterial({ color: 0x6f6c6c})
+);
+
+const start = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height + 1, width),
+    new THREE.MeshBasicMaterial({ color: 0x4fc134 })
+);
+
+const target = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height + 1, width),
+    new THREE.MeshBasicMaterial({ color: 0xff2020 })
+);
+
+const weight = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height + 1, width),
+    new THREE.MeshBasicMaterial({ color: 0x11457f })
+);
+
+
+const getBoard = () => {
+    for(let i = 0; i < board.length; i++){
+        for(let j = 0; j < board.length; j++){
+            boardCoor[i][j] = 0;
+            switch(boardCoor[i][j].material.color.getHex()){
+                    case start.material.color.getHex():
+                            startCoor = [j, i];
+                    case target.material.color.getHex():
+                            targetCoor = [j, i];
+                    case build.material.color.getHex():
+                            boardCoor[i][j] = 1;
+            }      
+        }
+    } 
+}
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -85,30 +129,6 @@ controls.mouseButtons = {
 
 
 
-const ground = new THREE.Mesh(
-    new THREE.BoxGeometry(width, height, width),
-    new THREE.MeshBasicMaterial({ color: 0xe1e1e1 })
-);
-
-const build = new THREE.Mesh(
-    new THREE.BoxGeometry(width, height + 1, width),
-    new THREE.MeshBasicMaterial({ color: 0x6f6c6c})
-);
-
-const start = new THREE.Mesh(
-    new THREE.BoxGeometry(width, height + 1, width),
-    new THREE.MeshBasicMaterial({ color: 0x4fc134 })
-);
-
-const target = new THREE.Mesh(
-    new THREE.BoxGeometry(width, height + 1, width),
-    new THREE.MeshBasicMaterial({ color: 0xff2020 })
-);
-
-const weight = new THREE.Mesh(
-    new THREE.BoxGeometry(width, height + 1, width),
-    new THREE.MeshBasicMaterial({ color: 0x11457f })
-);
 
 const toggleNode = () => {   
     let cs = document.getElementsByClassName("c")[0];
@@ -282,7 +302,6 @@ const toggleWall = (event) => {
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
-	let vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
     raycaster.setFromCamera( mouse, camera );
 
 	let intersects = raycaster.intersectObjects( board );
