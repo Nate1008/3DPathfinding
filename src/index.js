@@ -1,10 +1,10 @@
 /*
  * index.js
- * 
- * This is the first file loaded. It sets up the Renderer, 
- * Scene and Camera. It also starts the render loop and 
+ *
+ * This is the first file loaded. It sets up the Renderer,
+ * Scene and Camera. It also starts the render loop and
  * handles window resizes.
- * 
+ *
  */
 
 import * as THREE from 'three';
@@ -14,12 +14,13 @@ import * as dat from 'dat.gui';
 
 //Pathfinding Algos Functions
 
+let group = THREE.Group();
 let board = [];
 let outlines = [];
 
 const width = 1.5;
-const height = width / 2; 
-const rows = 20;
+const height = width / 2;
+const rows = 10;
 const cols = rows;
 const startCoor = [];
 const targetCoor = [];
@@ -57,14 +58,14 @@ const getBoard = () => {
             boardCoor[i][j] = 0;
             switch(boardCoor[i][j].material.color.getHex()){
                     case start.material.color.getHex():
-                            startCoor = [j, i];
+                            startCoor = [i, j];
                     case target.material.color.getHex():
-                            targetCoor = [j, i];
+                            targetCoor = [i, j];
                     case build.material.color.getHex():
                             boardCoor[i][j] = 1;
-            }      
+            }
         }
-    } 
+    }
 }
 
 const scene = new THREE.Scene();
@@ -80,9 +81,9 @@ document.body.appendChild( renderer.domElement );
 const stats = Stats();
 document.body.appendChild(stats.dom);
 
-for (let r = -rows; r < rows; r++) { 
+for (let r = -rows; r < rows; r++) {
     for (let c = -cols; c < cols; c++) {
-        let shape = new THREE.Group(); 
+        let shape = new THREE.Group();
         const cube = new THREE.Mesh(
             new THREE.BoxGeometry(width, height, width),
             new THREE.MeshBasicMaterial({ color: 0xe1e1e1 })
@@ -102,10 +103,10 @@ for (let r = -rows; r < rows; r++) {
 
         board.push(cube);
         outlines.push(outline);
-        scene.add(shape);
+        group.add(shape);
     }
 }
-
+scene.add(group);
 
 
 
@@ -123,14 +124,13 @@ controls.mouseButtons = {
     MIDDLE: THREE.MOUSE.MIDDLE,
     RIGHT: THREE.MOUSE.LEFT
 }
-//scene.add(group);
 
 
 
 
 
 
-const toggleNode = () => {   
+const toggleNode = () => {
     let cs = document.getElementsByClassName("c")[0];
     let labels = ["Start", "Target", "Wall", "Weighted"];
     let counter = 0;
@@ -141,7 +141,7 @@ const toggleNode = () => {
             break;
         }
     }
-    cs.textContent = labels[counter % 4] + " Node"; 
+    cs.textContent = labels[counter % 4] + " Node";
 }
 
 const clearAll = () => {
@@ -175,6 +175,10 @@ const clearWall = () => {
     cs.textContent = "Wall Node";
 }
 
+const resizeBoard = () => {
+
+}
+
 
 let node = {
     toggle: toggleNode,
@@ -186,6 +190,7 @@ const gui = new dat.GUI();
 gui.add(node, "toggle");
 gui.add(node, "clear");
 gui.add(node, "clearWall");
+gui.add(node, "rows");
 gui.open();
 
 const options = gui.addFolder("Controls");
@@ -197,11 +202,11 @@ options.add(controls, "rotateSpeed", 0, 5, 0.01);
 const animate = function () {
     requestAnimationFrame( animate );
 
-    controls.update(); 
+    controls.update();
     stats.begin();
     renderer.render( scene, camera );
     stats.end();
-    
+
 
     stats.update();
 };
@@ -258,19 +263,19 @@ const click = (cube, type) => {
             outlines[r + c].position.y = 0;
 //            toggleNode();
         } else if (type === "Target Node") {
-            clearType(target); 
+            clearType(target);
             cube.material = target.material;
             cube.scale.y = 1;
             cube.position.y = 0;
             outlines[r + c].scale.y = 1;
             outlines[r + c].position.y = 0;
 //            toggleNode();
-        } else { 
+        } else {
             if (type === "Wall Node") {
                 cube.material = build.material;
             } else if (type === "Weighted Node") {
                 cube.material = weight.material;
-            } 
+            }
             const rand = Math.floor(Math.random() * 3.5) + 2.5;
             cube.scale.y = rand;
             cube.position.y = 1;
@@ -286,11 +291,11 @@ const click = (cube, type) => {
     }
 
 //    if (cubeType === "Start Node") {
-//        cs.textContent = cubeType;    
+//        cs.textContent = cubeType;
 //    } else if (cubeType === "Target Node") {
 //        cs.textContent = cubeType;
 //    }
-   
+
 }
 
 
@@ -305,21 +310,21 @@ const toggleWall = (event) => {
     raycaster.setFromCamera( mouse, camera );
 
 	let intersects = raycaster.intersectObjects( board );
-     
+
 	if ( (intersects.length > 0 && wall !== intersects[0].object) ) {
 	    click(intersects[0].object, cs.textContent);
 	}
-    
+
     return intersects[0].object;
 }
 
 let wall = null;
 let mouseDown = 0;
 
-document.body.onmousedown = function(event) { 
+document.body.onmousedown = function(event) {
     if(event.button === 0) {
         ++mouseDown;
-        wall = toggleWall(event); 
+        wall = toggleWall(event);
     }
 }
 document.body.onmouseup = function(event) {
@@ -335,4 +340,3 @@ document.addEventListener( 'mousemove', function( event ) {
     }
 }
 , false );
-
