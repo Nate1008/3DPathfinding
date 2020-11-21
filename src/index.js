@@ -1,9 +1,7 @@
 /*
  * index.js
  *
- * This is the first file loaded. It sets up the Renderer,
- * Scene and Camera. It also starts the render loop and
- * handles window resizes.
+ * This is the file responsible for everything (basically).
  *
  */
 
@@ -11,20 +9,26 @@ import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.d.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui';
+import * as Algo from './algos.js';
 
-//Pathfinding Algos Functions
+//3D Pathfinding
 
-let group = THREE.Group();
+
+//LETS
+let group = new THREE.Group();
 let board = [];
 let outlines = [];
+let startCoor = [];
+let targetCoor = [];
+let boardCoor = [];
+let rows = 10;
+let cols = rows;
 
+//CONSTS
 const width = 1.5;
 const height = width / 2;
-const rows = 10;
-const cols = rows;
-const startCoor = [];
-const targetCoor = [];
-const boardCoor = [];
+
+
 
 const ground = new THREE.Mesh(
     new THREE.BoxGeometry(width, height, width),
@@ -48,7 +52,7 @@ const target = new THREE.Mesh(
 
 const weight = new THREE.Mesh(
     new THREE.BoxGeometry(width, height + 1, width),
-    new THREE.MeshBasicMaterial({ color: 0x11457f })
+    new THREE.MeshBasicMaterial({ color: 0x02abed })
 );
 
 
@@ -84,6 +88,7 @@ document.body.appendChild(stats.dom);
 for (let r = -rows; r < rows; r++) {
     for (let c = -cols; c < cols; c++) {
         let shape = new THREE.Group();
+
         const cube = new THREE.Mesh(
             new THREE.BoxGeometry(width, height, width),
             new THREE.MeshBasicMaterial({ color: 0xe1e1e1 })
@@ -106,6 +111,7 @@ for (let r = -rows; r < rows; r++) {
         group.add(shape);
     }
 }
+group.name = 'CUBE GROUP';
 scene.add(group);
 
 
@@ -175,22 +181,57 @@ const clearWall = () => {
     cs.textContent = "Wall Node";
 }
 
-const resizeBoard = () => {
+const resizeBoard = (newRows) => {
+  board = []
+  outlines = []
+  let selectedObject = scene.getObjectByName(group.name);
+  scene.remove( selectedObject );
+  let newGroup = new THREE.Group();
+  for (let r = -newRows; r < newRows; r++) {
+      for (let c = -newRows; c < newRows; c++) {
+          let shape = new THREE.Group();
 
+          const cube = new THREE.Mesh(
+              new THREE.BoxGeometry(width, height, width),
+              new THREE.MeshBasicMaterial({ color: 0xe1e1e1 })
+          );
+
+          const outline = new THREE.Mesh(
+              new THREE.BoxGeometry(width, height, width),
+              new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide})
+          );
+
+          cube.position.set(r * (width + 0.05), 0, c * (width + 0.05));
+          outline.position.set(r * (width + 0.05), 0, c * (width + 0.05));
+          outline.scale.multiplyScalar(1.05);
+
+          shape.add(cube);
+          shape.add(outline);
+
+          board.push(cube);
+          outlines.push(outline);
+          newGroup.add(shape);
+      }
+  }
+  group = newGroup;
+  group.name = 'CUBE GROUP';
+  scene.add(group);
+  rows = newRows;
+  cols = rows;
 }
 
 
 let node = {
     toggle: toggleNode,
     clear: clearAll,
-    clearWall: clearWall
+    clearWall: clearWall,
+    rows: rows*2
 }
 
 const gui = new dat.GUI();
 gui.add(node, "toggle");
 gui.add(node, "clear");
 gui.add(node, "clearWall");
-gui.add(node, "rows");
 gui.open();
 
 const options = gui.addFolder("Controls");
@@ -198,10 +239,17 @@ options.add(controls, "autoRotate");
 options.add(controls, "autoRotateSpeed", 0, 5, 0.01);
 options.add(controls, "zoomSpeed", 0, 5, 0.01);
 options.add(controls, "rotateSpeed", 0, 5, 0.01);
+options.add(node, "rows", 10, 40, 10);
+
+let previousRows = rows;
 
 const animate = function () {
     requestAnimationFrame( animate );
 
+    if (node.rows !== previousRows) {
+      resizeBoard((node.rows/2));
+    }
+    previousRows = node.rows;
     controls.update();
     stats.begin();
     renderer.render( scene, camera );
@@ -313,9 +361,11 @@ const toggleWall = (event) => {
 
 	if ( (intersects.length > 0 && wall !== intersects[0].object) ) {
 	    click(intersects[0].object, cs.textContent);
+      return intersects[0].object;
 	}
 
-    return intersects[0].object;
+  return null;
+
 }
 
 let wall = null;
