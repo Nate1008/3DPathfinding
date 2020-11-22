@@ -16,7 +16,7 @@ import { dfs } from './algos.js';
 
 //LETS
 let group = new THREE.Group();
-let board = [];
+export let board = [];
 let outlines = [];
 let startCoor = [];
 let targetCoor = [];
@@ -62,7 +62,6 @@ const getBoard = () => {
       } else if (node.material.side === THREE.BackSide) {
         return;
       }
-      console.log('HELLO')
       let r = Math.round(rows + (node.position.x / (width + 0.05)));
       let c = Math.round(cols + (node.position.z / (width + 0.05)));
       switch(board[((2 * rows) * r) + c].material.color.getHex()){
@@ -75,8 +74,10 @@ const getBoard = () => {
                   console.log(targetCoor);
                   break;
           case build.material.color.getHex():
-                  boardCoor[i][j] = 1;
+                  boardCoor[r][c] = 1;
                   break;
+          default:
+                  boardCoor[r][c] = 0;
       }
     })
 }
@@ -100,12 +101,12 @@ for (let r = -rows; r < rows; r++) {
         boardCoor[r + rows].push(0);
         let shape = new THREE.Group();
 
-        const cube = new THREE.Mesh(
+        let cube = new THREE.Mesh(
             new THREE.BoxGeometry(width, height, width),
             new THREE.MeshBasicMaterial({ color: 0xe1e1e1 })
         );
 
-        const outline = new THREE.Mesh(
+        let outline = new THREE.Mesh(
             new THREE.BoxGeometry(width, height, width),
             new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide})
         );
@@ -194,19 +195,22 @@ const clearWall = () => {
 const resizeBoard = (newRows) => {
   board = []
   outlines = []
+  board = [];
   let selectedObject = scene.getObjectByName(group.name);
   scene.remove( selectedObject );
   let newGroup = new THREE.Group();
   for (let r = -newRows; r < newRows; r++) {
+      boardCoor.push([]);
       for (let c = -newRows; c < newRows; c++) {
+          boardCoor[r + rows].push(0);
           let shape = new THREE.Group();
 
-          const cube = new THREE.Mesh(
+          let cube = new THREE.Mesh(
               new THREE.BoxGeometry(width, height, width),
               new THREE.MeshBasicMaterial({ color: 0xe1e1e1 })
           );
 
-          const outline = new THREE.Mesh(
+          let outline = new THREE.Mesh(
               new THREE.BoxGeometry(width, height, width),
               new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide})
           );
@@ -242,9 +246,7 @@ let node = {
 
 const visualizeDFS = (type) => {
   getBoard();
-  console.log(startCoor);
-  console.log(targetCoor);
-  dfs(board, boardCoor, startCoor, targetCoor, node.diagonal);
+  dfs(board, boardCoor, startCoor, targetCoor, node.diagonal, node.rows);
 }
 
 let pathfinding = {
