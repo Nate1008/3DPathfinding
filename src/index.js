@@ -67,11 +67,11 @@ const getBoard = () => {
       switch(board[((2 * rows) * r) + c].material.color.getHex()){
           case start.material.color.getHex():
                   startCoor = [r, c];
-                  console.log(startCoor);
+                  boardCoor[r][c] = 8;
                   break;
           case target.material.color.getHex():
                   targetCoor = [r, c];
-                  console.log(targetCoor);
+                  boardCoor[r][c] = 9;
                   break;
           case build.material.color.getHex():
                   boardCoor[r][c] = 1;
@@ -193,7 +193,7 @@ const clearWall = () => {
 }
 
 const resizeBoard = (newRows) => {
-  // boardCoor = []
+  boardCoor = []
   outlines = []
   board = [];
   let selectedObject = scene.getObjectByName(group.name);
