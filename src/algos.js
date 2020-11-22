@@ -13,7 +13,7 @@ const dfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
         let node = stack.pop();
         console.log(stack);
         console.log(node);
-        if (node == targetCoor) {
+        if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
           console.log('TARGET WAS FOUND');
           return;
         }
@@ -40,6 +40,8 @@ const dfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
             }
         }
     }
+    console.log('TARGET WAS NOT FOUND');
+    return;
 }
 
 

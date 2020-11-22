@@ -193,7 +193,7 @@ const clearWall = () => {
 }
 
 const resizeBoard = (newRows) => {
-  board = []
+  // boardCoor = []
   outlines = []
   board = [];
   let selectedObject = scene.getObjectByName(group.name);
@@ -202,7 +202,7 @@ const resizeBoard = (newRows) => {
   for (let r = -newRows; r < newRows; r++) {
       boardCoor.push([]);
       for (let c = -newRows; c < newRows; c++) {
-          boardCoor[r + rows].push(0);
+          boardCoor[r + newRows].push(0);
           let shape = new THREE.Group();
 
           let cube = new THREE.Mesh(
