@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.d.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui';
-import * as Algo from './algos.js';
+import { dfs } from './algos.js';
 
 //3D Pathfinding
 
@@ -57,16 +57,23 @@ const weight = new THREE.Mesh(
 
 
 const getBoard = () => {
-    for(let i = 0; i < board.length; i++){
-        for(let j = 0; j < board.length; j++){
-            boardCoor[i][j] = 0;
-            switch(boardCoor[i][j].material.color.getHex()){
+    boardCoor = []
+    for(let i = 0; i < rows; i++){
+        boardCoor.push([]);
+        for(let j = 0; j < cols; j++){
+            boardCoor[i].push(0)
+            switch(board[(i * 2 * rows) + j].material.color.getHex()){
                     case start.material.color.getHex():
                             startCoor = [i, j];
+                            console.log(startCoor);
+                            break;
                     case target.material.color.getHex():
                             targetCoor = [i, j];
+                            console.log(targetCoor);
+                            break;
                     case build.material.color.getHex():
                             boardCoor[i][j] = 1;
+                            break;
             }
         }
     }
@@ -130,7 +137,6 @@ controls.mouseButtons = {
     MIDDLE: THREE.MOUSE.MIDDLE,
     RIGHT: THREE.MOUSE.LEFT
 }
-
 
 
 
@@ -225,13 +231,28 @@ let node = {
     toggle: toggleNode,
     clear: clearAll,
     clearWall: clearWall,
-    rows: rows*2
+    rows: rows*2,
+    diagonal: false
+}
+
+
+const visualizeDFS = (type) => {
+  getBoard();
+  console.log(startCoor);
+  console.log(targetCoor);
+  dfs(board, boardCoor, startCoor, targetCoor, node.diagonal);
+}
+
+let pathfinding = {
+  visualizeDFS: visualizeDFS
 }
 
 const gui = new dat.GUI();
 gui.add(node, "toggle");
 gui.add(node, "clear");
 gui.add(node, "clearWall");
+gui.add(node, "diagonal");
+gui.add(pathfinding, "visualizeDFS");
 gui.open();
 
 const options = gui.addFolder("Controls");
@@ -304,36 +325,36 @@ const click = (cube, type) => {
     if( cube.material.color.getHex() === ground.material.color.getHex() || cubeType !== type ) {
         if (type === "Start Node") {
             clearType(start);
-            cube.material = start.material;
-            cube.scale.y = 1;
-            cube.position.y = 0;
+            board[r + c].material = start.material;
+            board[r + c].scale.y = 1;
+            board[r + c].position.y = 0;
             outlines[r + c].scale.y = 1;
             outlines[r + c].position.y = 0;
 //            toggleNode();
         } else if (type === "Target Node") {
             clearType(target);
-            cube.material = target.material;
-            cube.scale.y = 1;
-            cube.position.y = 0;
+            board[r + c].material = target.material;
+            board[r + c].scale.y = 1;
+            board[r + c].position.y = 0;
             outlines[r + c].scale.y = 1;
             outlines[r + c].position.y = 0;
 //            toggleNode();
         } else {
             if (type === "Wall Node") {
-                cube.material = build.material;
+                board[r + c].material = build.material;
             } else if (type === "Weighted Node") {
-                cube.material = weight.material;
+                board[r + c].material = weight.material;
             }
             const rand = Math.floor(Math.random() * 3.5) + 2.5;
-            cube.scale.y = rand;
-            cube.position.y = 1;
+            board[r + c].scale.y = rand;
+            board[r + c].position.y = 1;
             outlines[r + c].scale.y = rand;
             outlines[r + c].position.y = 1;
         }
     } else {
-        cube.material = ground.material;
-        cube.scale.y = 1;
-        cube.position.y = 0;
+        board[r + c].material = ground.material;
+        board[r + c].scale.y = 1;
+        board[r + c].position.y = 0;
         outlines[r + c].scale.y = 1;
         outlines[r + c].position.y = 0;
     }
