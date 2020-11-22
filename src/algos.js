@@ -38,6 +38,8 @@ const dfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
             }
         }
     }
+    console.log('TARGET WAS NOT FOUND');
+    return;
 }
 
 
