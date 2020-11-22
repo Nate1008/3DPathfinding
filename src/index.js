@@ -67,11 +67,9 @@ const getBoard = () => {
       switch(board[((2 * rows) * r) + c].material.color.getHex()){
           case start.material.color.getHex():
                   startCoor = [r, c];
-                  boardCoor[r][c] = 8;
                   break;
           case target.material.color.getHex():
                   targetCoor = [r, c];
-                  boardCoor[r][c] = 9;
                   break;
           case build.material.color.getHex():
                   boardCoor[r][c] = 1;

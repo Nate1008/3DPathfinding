@@ -7,9 +7,10 @@ const eightdir = [[0, 1], [-1, 1], [1, 0], [1, -1], [-1, 0], [-1, 1], [0, -1], [
 
 const dfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
     let stack = [];
-    console.log(boardCoor);
     stack.push(startCoor);
     while(stack.length) {
+        console.log(stack);
+        console.log(boardCoor);
         let node = stack.pop();
         if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
           console.log('TARGET WAS FOUND');
@@ -37,8 +38,6 @@ const dfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
             }
         }
     }
-    console.log('TARGET WAS NOT FOUND');
-    return;
 }
 
 
