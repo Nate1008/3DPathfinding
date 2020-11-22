@@ -55,28 +55,30 @@ const weight = new THREE.Mesh(
     new THREE.MeshBasicMaterial({ color: 0x02abed })
 );
 
-
 const getBoard = () => {
-    boardCoor = []
-    for(let i = 0; i < rows; i++){
-        boardCoor.push([]);
-        for(let j = 0; j < cols; j++){
-            boardCoor[i].push(0)
-            switch(board[(i * 2 * rows) + j].material.color.getHex()){
-                    case start.material.color.getHex():
-                            startCoor = [i, j];
-                            console.log(startCoor);
-                            break;
-                    case target.material.color.getHex():
-                            targetCoor = [i, j];
-                            console.log(targetCoor);
-                            break;
-                    case build.material.color.getHex():
-                            boardCoor[i][j] = 1;
-                            break;
-            }
-        }
-    }
+    group.traverse((node) => {
+      if (!(node instanceof THREE.Mesh)) {
+        return;
+      } else if (node.material.side === THREE.BackSide) {
+        return;
+      }
+      console.log('HELLO')
+      let r = Math.round(rows + (node.position.x / (width + 0.05)));
+      let c = Math.round(cols + (node.position.z / (width + 0.05)));
+      switch(board[((2 * rows) * r) + c].material.color.getHex()){
+          case start.material.color.getHex():
+                  startCoor = [r, c];
+                  console.log(startCoor);
+                  break;
+          case target.material.color.getHex():
+                  targetCoor = [r, c];
+                  console.log(targetCoor);
+                  break;
+          case build.material.color.getHex():
+                  boardCoor[i][j] = 1;
+                  break;
+      }
+    })
 }
 
 const scene = new THREE.Scene();
@@ -93,7 +95,9 @@ const stats = Stats();
 document.body.appendChild(stats.dom);
 
 for (let r = -rows; r < rows; r++) {
+    boardCoor.push([]);
     for (let c = -cols; c < cols; c++) {
+        boardCoor[r + rows].push(0);
         let shape = new THREE.Group();
 
         const cube = new THREE.Mesh(
@@ -161,7 +165,7 @@ const clearAll = () => {
        board[i].scale.y = 1;
        board[i].material = ground.material;
        board[i].position.y = 0;
-       outlines[i].scale.y = 1;
+       outlines[i].scale.y = 1.05;
        outlines[i].position.y = 0;
     }
     let cs = document.getElementsByClassName("c")[0];
@@ -174,7 +178,7 @@ const clearType = (type) => {
            board[i].scale.y = 1;
            board[i].material = ground.material;
            board[i].position.y = 0;
-           outlines[i].scale.y = 1;
+           outlines[i].scale.y = 1.05;
            outlines[i].position.y = 0;
         }
     }
@@ -325,39 +329,40 @@ const click = (cube, type) => {
     if( cube.material.color.getHex() === ground.material.color.getHex() || cubeType !== type ) {
         if (type === "Start Node") {
             clearType(start);
-            board[r + c].material = start.material;
-            board[r + c].scale.y = 1;
-            board[r + c].position.y = 0;
-            outlines[r + c].scale.y = 1;
+            cube.material = start.material;
+            cube.scale.y = 1;
+            cube.position.y = 0;
+            outlines[r + c].scale.y = 1.05;
             outlines[r + c].position.y = 0;
 //            toggleNode();
         } else if (type === "Target Node") {
             clearType(target);
-            board[r + c].material = target.material;
-            board[r + c].scale.y = 1;
-            board[r + c].position.y = 0;
-            outlines[r + c].scale.y = 1;
+            cube.material = target.material;
+            cube.scale.y = 1;
+            cube.position.y = 0;
+            outlines[r + c].scale.y = 1.05;
             outlines[r + c].position.y = 0;
 //            toggleNode();
         } else {
             if (type === "Wall Node") {
-                board[r + c].material = build.material;
+                cube.material = build.material;
             } else if (type === "Weighted Node") {
-                board[r + c].material = weight.material;
+                cube.material = weight.material;
             }
             const rand = Math.floor(Math.random() * 3.5) + 2.5;
-            board[r + c].scale.y = rand;
-            board[r + c].position.y = 1;
+            cube.scale.y = rand;
+            cube.position.y = 1;
             outlines[r + c].scale.y = rand;
             outlines[r + c].position.y = 1;
         }
     } else {
-        board[r + c].material = ground.material;
-        board[r + c].scale.y = 1;
-        board[r + c].position.y = 0;
-        outlines[r + c].scale.y = 1;
+        cube.material = ground.material;
+        cube.scale.y = 1;
+        cube.position.y = 0;
+        outlines[r + c].scale.y = 1.05;
         outlines[r + c].position.y = 0;
     }
+    board[r + c] = cube;
 
 //    if (cubeType === "Start Node") {
 //        cs.textContent = cubeType;
@@ -382,10 +387,9 @@ const toggleWall = (event) => {
 
 	if ( (intersects.length > 0 && wall !== intersects[0].object) ) {
 	    click(intersects[0].object, cs.textContent);
-      return intersects[0].object;
 	}
 
-  return null;
+  return intersects[0].object;
 
 }
 
