@@ -42,6 +42,21 @@ const dfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
     return;
 }
 
+const bfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
+    visited[node] = true;
+    queue.equeue(node);
+    while (!queue.isEmpty()) {
+        let node = queue.dequeue();
+        console.log(`we visited ${visiting}`)
+        for (let j = 0; j < graphAdj[visiting].length; j++) {
+            if ((graphAdj[visiting][j] === 1) && (visited[j] === false)) {
+              visited[j] = true;
+              queue.equeue(j);
+            }
+        }
+    }
+}
+
 
 
 
