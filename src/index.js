@@ -5,11 +5,13 @@
  *
  */
 
+
 import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.d.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui';
-import { dfs } from './algos.js';
+import { dfs, bfs } from './algos.js';
+
 
 //3D Pathfinding
 
@@ -249,8 +251,14 @@ const visualizeDFS = (type) => {
   dfs(board, boardCoor, startCoor, targetCoor, node.diagonal, node.rows);
 }
 
+const visualizeBFS = (type) => {
+  getBoard();
+  bfs(board, boardCoor, startCoor, targetCoor, node.diagonal, node.rows);
+}
+
 let pathfinding = {
-  visualizeDFS: visualizeDFS
+  visualizeDFS: visualizeDFS,
+  visualizeBFS: visualizeBFS
 }
 
 const gui = new dat.GUI();
@@ -259,6 +267,7 @@ gui.add(node, "clear");
 gui.add(node, "clearWall");
 gui.add(node, "diagonal");
 gui.add(pathfinding, "visualizeDFS");
+gui.add(pathfinding, "visualizeBFS");
 gui.open();
 
 const options = gui.addFolder("Controls");
