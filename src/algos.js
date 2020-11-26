@@ -5,16 +5,16 @@ const fourdir = [[0, 1], [1, 0], [-1, 0], [0, -1]];
 const eightdir = [[0, 1], [-1, 1], [1, 0], [1, -1], [-1, 0], [-1, 1], [0, -1], [1, -1]];
 
 
-const dfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
+const dfs = (board, boardCoor, boardPath, startCoor, targetCoor, diagonal, rows) => {
     let stack = [];
     stack.push(startCoor);
+    boardPath[startCoor[0]][startCoor[1]].push(startCoor);
     while(stack.length) {
-        console.log(stack);
-        console.log(boardCoor);
         let node = stack.pop();
         if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
           console.log('TARGET WAS FOUND');
-          return;
+          console.log(boardPath[node[0]][node[1]]);
+          return boardPath[node[0]][node[1]];
         }
 
         if (boardCoor[node[0]][node[1]] === 0) {
@@ -34,7 +34,9 @@ const dfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
                 }
                 // board[(node[0] + dir[0] * rows * 2) + (node[1] + dir[1])].material = THREE.MeshBasicMaterial({ color: 0x00b8d2 });
                 if (neighbor === 0) {
-                  stack.push([ (node[0] + dir[0]), (node[1] + dir[1]) ]);
+                  let nextCoor = [ (node[0] + dir[0]), (node[1] + dir[1]) ]
+                  stack.push(nextCoor);
+                  boardPath[nextCoor[0]][nextCoor[1]] = boardPath[node[0]][node[1]].concat([nextCoor]);
                 }
             }
         }
@@ -43,43 +45,44 @@ const dfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
     return;
 }
 
-const bfs = (board, boardCoor, startCoor, targetCoor, diagonal, rows) => {
-    let path = [];
-    boardCoor[startCoor[0]][startCoor[1]] = 2;
+const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, diagonal, rows) => {
     let queue = [];
     queue.unshift(startCoor);
+    boardPath[startCoor[0]][startCoor[1]].push(startCoor);
+    boardCoor[startCoor[0]][startCoor[1]] = 2;
     while (queue.length) {
         let node = queue.pop();
         if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
           console.log('TARGET WAS FOUND');
-          return;
+          console.log(boardPath[node[0]][node[1]]);
+          return boardPath[node[0]][node[1]];
         }
-        if(boardCoor[node[0]][node[1]] === 0) {
-            console.log('VISITED')
-            console.log(node);
-            let dirs = [];
-            if (diagonal) {
-              dirs = eightdir;
-            } else {
-              dirs = fourdir;
+        // console.log('VISITED')
+        // console.log(node);
+        let dirs = [];
+        if (diagonal) {
+          dirs = eightdir;
+        } else {
+          dirs = fourdir;
+        }
+        for(let dir of dirs) {
+            let neighbor;
+            try {
+                neighbor = boardCoor[node[0] + dir[0]][node[1] + dir[1]];
+            } catch (err) {
+              continue;
             }
-            for(let dir of dirs) {
-                let neighbor;
-                try {
-                    neighbor = boardCoor[node[0] + dir[0]][node[1] + dir[1]];
-                } catch (err) {
-                  continue;
-                }
-                // board[(node[0] + dir[0] * rows * 2) + (node[1] + dir[1])].material = THREE.MeshBasicMaterial({ color: 0x00b8d2 })
-                if (neighbor === 0) {
-                  boardCoor[node[0]][node[1]] = 2;
-                  queue.unshift([ (node[0] + dir[0]), (node[1] + dir[1]) ]);
-                }
+            // board[(node[0] + dir[0] * rows * 2) + (node[1] + dir[1])].material = THREE.MeshBasicMaterial({ color: 0x00b8d2 })
+            if (neighbor === 0) {
+              boardCoor[node[0]][node[1]] = 2;
+              let nextCoor = [ (node[0] + dir[0]), (node[1] + dir[1]) ]
+              boardPath[nextCoor[0]][nextCoor[1]] = boardPath[node[0]][node[1]].concat([nextCoor]);
+              queue.unshift(nextCoor);
             }
         }
     }
     console.log('TARGET WAS NOT FOUND');
-    return
+    return;
 }
 
 

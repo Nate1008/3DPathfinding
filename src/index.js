@@ -18,12 +18,13 @@ import { dfs, bfs } from './algos.js';
 
 //LETS
 let group = new THREE.Group();
-export let board = [];
+let board = [];
 let outlines = [];
 let startCoor = [];
 let targetCoor = [];
 let boardCoor = [];
-let rows = 10;
+let boardPath = [];
+let rows = 5;
 let cols = rows;
 
 //CONSTS
@@ -66,6 +67,7 @@ const getBoard = () => {
       }
       let r = Math.round(rows + (node.position.x / (width + 0.05)));
       let c = Math.round(cols + (node.position.z / (width + 0.05)));
+      boardPath[c][r] = [];
       switch(board[((2 * rows) * r) + c].material.color.getHex()){
           case start.material.color.getHex():
                   startCoor = [c, r];
@@ -99,8 +101,10 @@ document.body.appendChild(stats.dom);
 
 for (let r = -rows; r < rows; r++) {
     boardCoor.push([]);
+    boardPath.push([]);
     for (let c = -cols; c < cols; c++) {
         boardCoor[r + rows].push(0);
+        boardPath[r + rows].push([]);
         let shape = new THREE.Group();
 
         let cube = new THREE.Mesh(
@@ -203,8 +207,10 @@ const resizeBoard = (newRows) => {
   let newGroup = new THREE.Group();
   for (let r = -newRows; r < newRows; r++) {
       boardCoor.push([]);
+      boardPath.push([]);
       for (let c = -newRows; c < newRows; c++) {
           boardCoor[r + newRows].push(0);
+          boardPath[r + newRows].push([]);
           let shape = new THREE.Group();
 
           let cube = new THREE.Mesh(
@@ -248,12 +254,12 @@ let node = {
 
 const visualizeDFS = (type) => {
   getBoard();
-  dfs(board, boardCoor, startCoor, targetCoor, node.diagonal, node.rows);
+  dfs(board, boardCoor, boardPath, startCoor, targetCoor, node.diagonal, node.rows);
 }
 
 const visualizeBFS = (type) => {
   getBoard();
-  bfs(board, boardCoor, startCoor, targetCoor, node.diagonal, node.rows);
+  bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.diagonal, node.rows);
 }
 
 let pathfinding = {
