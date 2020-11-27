@@ -88,7 +88,7 @@ const getBoard = () => {
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
-camera.position.set(0, 90, 0);
+camera.position.set(0, 30, 0);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -199,9 +199,10 @@ const clearWall = () => {
 }
 
 const resizeBoard = (newRows) => {
-  boardCoor = []
-  outlines = []
+  boardCoor = [];
+  outlines = [];
   board = [];
+  boardPath = [];
   let selectedObject = scene.getObjectByName(group.name);
   scene.remove( selectedObject );
   let newGroup = new THREE.Group();
