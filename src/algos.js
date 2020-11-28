@@ -23,8 +23,7 @@ const reset = (boardPath, startCoor) => {
     boardPath[startCoor[0]][startCoor[1]].push(startCoor);
 }
 
-const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, diagonal, rows) => {
-    console.log(node);
+const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, diagonal, rows, delay) => {
     if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
         console.log('TARGET WAS FOUND');
         console.log(boardPath[node[0]][node[1]]);
@@ -58,10 +57,11 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, diagonal,
                 boardPath[nextCoor[0]][nextCoor[1]] = boardPath[node[0]][node[1]].concat([nextCoor]);
                 ret = setTimeout(() => {
                     let _ret = dfs(board, boardCoor, boardPath, nextCoor, startCoor, targetCoor, diagonal, rows);
+                    console.log(_ret)
                     if (_ret) {
                         return _ret;
                     }
-                }, 500);
+                }, delay);
                 return ret;
 
 
@@ -73,7 +73,7 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, diagonal,
 }
 
 
-const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, diagonal, rows) => {
+const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, diagonal, rows, delay) => {
     if (!queue.length) {
         console.log('TARGET WAS NOT FOUND');
         return;
@@ -100,7 +100,7 @@ const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, diagonal, rows)
             dirs = fourdir;
         }
 
-        let ret;
+
         for (let dir of dirs) {
             let neighbor;
             try {
@@ -114,16 +114,16 @@ const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, diagonal, rows)
                 queue.unshift(nextCoor);
             }
         }
-        ret = setTimeout(() => {
-            let _ret = bfs(board, boardCoor, boardPath, startCoor, targetCoor, diagonal, rows);
-            if (_ret) {
-                return _ret;
-            }
-        }, 500);
-        return ret;
     }
-    console.log('TARGET WAS NOT FOUND');
-    return;
+
+    let ret = setTimeout(() => {
+        let _ret = bfs(board, boardCoor, boardPath, startCoor, targetCoor, diagonal, rows);
+
+        if (_ret) {
+            return _ret;
+        }
+    }, delay - 50);
+    return ret;
 }
 
 
