@@ -54,14 +54,14 @@ const build = new THREE.Mesh(
 );
 
 const start = new THREE.Mesh(
-	new THREE.BoxGeometry(width, height + 1, width),
+	new THREE.BoxGeometry(width, height, width),
 	new THREE.MeshBasicMaterial({
 		color: 0x4fc134
 	})
 );
 
 const target = new THREE.Mesh(
-	new THREE.BoxGeometry(width, height + 1, width),
+	new THREE.BoxGeometry(width, height, width),
 	new THREE.MeshBasicMaterial({
 		color: 0xff2020
 	})
@@ -71,6 +71,13 @@ const weight = new THREE.Mesh(
 	new THREE.BoxGeometry(width, height + 1, width),
 	new THREE.MeshBasicMaterial({
 		color: 0x02abed
+	})
+);
+
+const visited = new THREE.Mesh(
+	new THREE.BoxGeometry(width, height, width),
+	new THREE.MeshBasicMaterial({
+		color: 0x32c6db
 	})
 );
 
@@ -218,6 +225,7 @@ const clearType = (type) => {
 const clearWall = () => {
 	clearType(build);
 	clearType(weight);
+	clearType(visited);
 	let cs = document.getElementsByClassName("c")[0];
 	cs.textContent = "Wall Node";
 }
@@ -284,12 +292,14 @@ let node = {
 
 const visualizeDFS = (type) => {
 	getBoard();
+	clearType(visited);
 	reset(boardPath, startCoor);
 	dfs(board, boardCoor, boardPath, startCoor, startCoor, targetCoor, node.Rows, node.Delay * 1000);
 }
 
 const visualizeBFS = (type) => {
 	getBoard();
+	clearType(visited);
 	reset(boardPath, startCoor);
 	bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows, node.Delay * 1000);
 }
@@ -388,7 +398,7 @@ const click = (cube, type) => {
 			cube.position.y = 0;
 			outlines[r + c].scale.y = 1.05;
 			outlines[r + c].position.y = 0;
-			toggleNode();
+			// toggleNode();
 		} else if (type === "Target Node") {
 			clearType(target);
 			cube.material = target.material;
@@ -396,7 +406,7 @@ const click = (cube, type) => {
 			cube.position.y = 0;
 			outlines[r + c].scale.y = 1.05;
 			outlines[r + c].position.y = 0;
-			toggleNode();
+			// toggleNode();
 		} else {
 			if (type === "Wall Node") {
 				cube.material = build.material;

@@ -22,7 +22,7 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, del
 
 	if (!(node[0] === startCoor[0] && node[1] == startCoor[1])) {
 		board[(rows * node[1]) + node[0]].material = new THREE.MeshBasicMaterial({
-			color: 0x002667
+			color: 0x32c6db
 		});
 	}
 
@@ -75,7 +75,7 @@ const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) =>
 
 		if (!(node[0] === startCoor[0] && node[1] == startCoor[1])) {
 			board[(rows * node[1]) + node[0]].material = new THREE.MeshBasicMaterial({
-				color: 0x002667
+				color: 0x32c6db
 			});
 		}
 		for (let dir of dirs) {
