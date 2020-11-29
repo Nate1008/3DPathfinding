@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import {
+	path
+} from './index.js';
 
 const dirs = [
     [0, 1],
@@ -17,6 +20,7 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, del
 	if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
 		console.log('TARGET WAS FOUND');
 		console.log(boardPath[node[0]][node[1]]);
+		path = boardPath[node[0]][node[1]];
 		return boardPath[node[0]][node[1]];
 	}
 
@@ -41,7 +45,6 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, del
 				boardPath[nextCoor[0]][nextCoor[1]] = boardPath[node[0]][node[1]].concat([nextCoor]);
 				ret = setTimeout(() => {
 					let _ret = dfs(board, boardCoor, boardPath, nextCoor, startCoor, targetCoor, rows, delay);
-					console.log(_ret)
 					if (_ret) {
 						return _ret;
 					}
@@ -53,15 +56,14 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, del
 		}
 	}
 	console.log('TARGET WAS NOT FOUND');
-	return;
+	return null;
 }
 
 
 const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) => {
-	console.log(delay);
 	if (!queue.length) {
 		console.log('TARGET WAS NOT FOUND');
-		return;
+		return null;
 	}
 	let node = queue.pop();
 
@@ -70,6 +72,7 @@ const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) =>
 		if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
 			console.log('TARGET WAS FOUND');
 			console.log(boardPath[node[0]][node[1]]);
+			path = boardPath[node[0]][node[1]];
 			return boardPath[node[0]][node[1]];
 		}
 
@@ -95,7 +98,6 @@ const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) =>
 
 	let ret = setTimeout(() => {
 		let _ret = bfs(board, boardCoor, boardPath, startCoor, targetCoor, rows, delay);
-
 		if (_ret) {
 			return _ret;
 		}

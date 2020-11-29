@@ -1,9 +1,9 @@
-/*
- * index.js
- *
- * This is the file responsible for everything (basically).
- *
- */
+//  _____   ____    ____      _     _____   _   _   _____   ___   _   _   ____    ___   _   _    ____
+// |___ /  |  _ \  |  _ \    / \   |_   _| | | | | |  ___| |_ _| | \ | | |  _ \  |_ _| | \ | |  / ___|
+//   |_ \  | | | | | |_) |  / _ \    | |   | |_| | | |_     | |  |  \| | | | | |  | |  |  \| | | |  _
+//  ___) | | |_| | |  __/  / ___ \   | |   |  _  | |  _|    | |  | |\  | | |_| |  | |  | |\  | | |_| |
+// |____/  |____/  |_|    /_/   \_\  |_|   |_| |_| |_|     |___| |_| \_| |____/  |___| |_| \_|  \____|
+
 
 
 import * as THREE from 'three';
@@ -12,14 +12,7 @@ import {
 	OrbitControls
 } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui';
-import {
-	reset,
-	dfs,
-	bfs
-} from './algos.js';
 
-
-//3D Pathfinding
 
 
 //LETS
@@ -32,13 +25,15 @@ let boardCoor = [];
 let boardPath = [];
 let rows = 5;
 let cols = rows;
+let progress = false;
+let path = null;
 
 //CONSTS
 const width = 1.5;
 const height = width / 2;
 
-
-
+//------------------------------------------------------------------------------------------------------------------------------------
+//NODE TYPES
 const ground = new THREE.Mesh(
 	new THREE.BoxGeometry(width, height, width),
 	new THREE.MeshBasicMaterial({
@@ -81,6 +76,15 @@ const visited = new THREE.Mesh(
 	})
 );
 
+const _path = new THREE.Mesh(
+	new THREE.BoxGeometry(width, height, width),
+	new THREE.MeshBasicMaterial({
+		color: 0xfdd14b
+	})
+);
+
+//------------------------------------------------------------------------------------------------------------------------------------
+//GET THE CURRENT BOARD INTO AN 2D ARRAY
 const getBoard = () => {
 	group.traverse((node) => {
 		if (!(node instanceof THREE.Mesh)) {
@@ -109,6 +113,8 @@ const getBoard = () => {
 	})
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------
+//SETING UP THE SCENE - BOILERPLATE
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 30, 0);
@@ -124,6 +130,7 @@ document.body.appendChild(renderer.domElement);
 const stats = Stats();
 document.body.appendChild(stats.dom);
 
+//CREATING BOARD (3E)
 for (let r = -rows; r < rows; r++) {
 	boardCoor.push([]);
 	boardPath.push([]);
@@ -162,7 +169,15 @@ for (let r = -rows; r < rows; r++) {
 group.name = 'CUBE GROUP';
 scene.add(group);
 
+//------------------------------------------------------------------------------------------------------------------------------------
 
+//   ____   _   _   ___
+//  / ___| | | | | |_ _|
+// | |  _  | | | |  | |
+// | |_| | | |_| |  | |
+//  \____|  \___/  |___|
+
+//------------------------------------------------------------------------------------------------------------------------------------
 
 
 let controls = new OrbitControls(camera, renderer.domElement);
@@ -179,10 +194,8 @@ controls.mouseButtons = {
 	RIGHT: THREE.MOUSE.LEFT
 }
 
-
-
-
-
+//------------------------------------------------------------------------------------------------------------------------------------
+//Toggles between types of node - Selected Node
 const toggleNode = (x) => {
 	x = !x ? 1 : x;
 	let cs = document.getElementsByClassName("c")[0];
@@ -198,7 +211,12 @@ const toggleNode = (x) => {
 	cs.textContent = labels[counter % 4] + " Node";
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------
+//Clears entire board
 const clearAll = () => {
+	if (progress) {
+		return;
+	}
 	for (let i = 0; i < board.length; i++) {
 		board[i].scale.y = 1;
 		board[i].material = ground.material;
@@ -210,7 +228,12 @@ const clearAll = () => {
 	cs.textContent = "Start Node";
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------
+//Clears a given node type
 const clearType = (type) => {
+	if (progress) {
+		return;
+	}
 	for (let i = 0; i < board.length; i++) {
 		if (board[i].material.color.getHex() === type.material.color.getHex()) {
 			board[i].scale.y = 1;
@@ -222,15 +245,34 @@ const clearType = (type) => {
 	}
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------
+// Clears Walls with clearType
 const clearWall = () => {
+	if (progress) {
+		return;
+	}
 	clearType(build);
 	clearType(weight);
-	clearType(visited);
 	let cs = document.getElementsByClassName("c")[0];
 	cs.textContent = "Wall Node";
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------
+//Clears Visited and Path nodes
+const clearPath = () => {
+	if (progress) {
+		return;
+	}
+	clearType(visited);
+	clearType(_path);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------
+//Resizes the 3D board - (10x10, 20x20, 30x30, 40x40)
 const resizeBoard = (newRows) => {
+	if (progress) {
+		return;
+	}
 	boardCoor = [];
 	outlines = [];
 	board = [];
@@ -280,45 +322,84 @@ const resizeBoard = (newRows) => {
 	cols = rows;
 }
 
-
+//------------------------------------------------------------------------------------------------------------------------------------
+// Object for GUI (The GUI API uses/needs objects)
 let node = {
 	toggle: toggleNode,
 	clear: clearAll,
 	clearWall: clearWall,
+	clearPath: clearPath,
 	Rows: rows * 2,
 	Delay: 0.25,
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------
+// Shows the path recursively (so it updates in real time)
+let pathCounter = 0;
+const visualizePath = () => {
+	console.log('WORKS')
+	pathCounter++;
+	if (pathCounter + 1 >= path.length) {
+		progress = false;
+		return;
+	}
 
-const visualizeDFS = (type) => {
+	let node = path[pathCounter];
+	board[((rows * 2) * node[1]) + node[0]].material = new THREE.MeshBasicMaterial({
+		color: 0xfdd14b
+	});
+	setTimeout(() => {
+		visualizePath();
+	}, (node.Delay * 1000));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------
+// Call the dfs method and handles the boilerplate things (getting the current board, reseting stuff)
+const visualizeDFS = () => {
+	if (progress) {
+		return;
+	}
 	getBoard();
 	clearType(visited);
 	reset(boardPath, startCoor);
 	dfs(board, boardCoor, boardPath, startCoor, startCoor, targetCoor, node.Rows, node.Delay * 1000);
+	progress = true;
 }
 
-const visualizeBFS = (type) => {
+//------------------------------------------------------------------------------------------------------------------------------------
+// Call the bfs method and handles the boilerplate things (getting the current board, reseting stuff)
+const visualizeBFS = () => {
+	if (progress) {
+		return;
+	}
 	getBoard();
 	clearType(visited);
 	reset(boardPath, startCoor);
 	bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows, node.Delay * 1000);
+	progress = true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------
+// Pathfinding Object for GUI (The GUI API uses/needs objects)
 let pathfinding = {
 	visualizeDFS: visualizeDFS,
 	visualizeBFS: visualizeBFS
 }
 
+//Primary GUI
 const gui = new dat.GUI();
 gui.add(node, "toggle");
 gui.add(node, "clear");
 gui.add(node, "clearWall");
+gui.add(node, "clearPath");
 gui.open();
 
+//Secondary GUI - The Algos
 const algos = gui.addFolder("Algorithms");
 algos.add(pathfinding, "visualizeDFS");
 algos.add(pathfinding, "visualizeBFS");
 
+//Tertiary GUI - The (customizable) Controls
 const options = gui.addFolder("Controls");
 options.add(controls, "autoRotate");
 options.add(controls, "autoRotateSpeed", 0, 5, 0.01);
@@ -327,15 +408,18 @@ options.add(controls, "rotateSpeed", 0, 5, 0.01);
 options.add(node, "Rows", 10, 40, 10);
 options.add(node, "Delay", 0.1, 1.5, 0.05);
 
+//------------------------------------------------------------------------------------------------------------------------------------
+//Animate runs every frame - runs checks and updates stuff
 let previousRows = rows;
-
 const animate = function() {
 	requestAnimationFrame(animate);
 
 	if (node.Rows !== previousRows) {
 		resizeBoard((node.Rows / 2));
 	}
-	previousRows = node.Rows;
+	if (!progress) {
+		previousRows = node.Rows;
+	}
 	controls.update();
 	stats.begin();
 	renderer.render(scene, camera);
@@ -347,6 +431,17 @@ const animate = function() {
 
 animate();
 
+//------------------------------------------------------------------------------------------------------------------------------------
+
+//  _____  __     __  _____   _   _   _____   ____
+// | ____| \ \   / / | ____| | \ | | |_   _| / ___|
+// |  _|    \ \ / /  |  _|   |  \| |   | |   \___ \
+// | |___    \ V /   | |___  | |\  |   | |    ___) |
+// |_____|    \_/    |_____| |_| \_|   |_|   |____/
+
+//------------------------------------------------------------------------------------------------------------------------------------
+
+//Resizes the window - boilerplate
 const windowResizeHanlder = () => {
 	const {
 		innerHeight,
@@ -360,16 +455,18 @@ const windowResizeHanlder = () => {
 windowResizeHanlder();
 window.addEventListener('resize', windowResizeHanlder);
 
-
-
-
+//------------------------------------------------------------------------------------------------------------------------------------
+// Changes the captions of the buttons (instead of clearAll, this makes it Clear All)
 let cs = document.getElementsByClassName("c")[0];
 cs.textContent = "Start Node"
 let labels = document.getElementsByTagName("span");
 labels[0].textContent = "Selected Node";
 labels[1].textContent = "Clear All";
 labels[2].textContent = "Clear Walls";
+labels[3].textContent = "Clear Path";
 
+//------------------------------------------------------------------------------------------------------------------------------------
+//Runs when user clicks on tile - changes it to selected node
 const click = (cube, type) => {
 	let cubeType = "";
 	switch (cube.material.color.getHex()) {
@@ -436,11 +533,10 @@ const click = (cube, type) => {
 
 }
 
-
-
+//------------------------------------------------------------------------------------------------------------------------------------
+//Finds what tile user click on
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
-
 const toggleWall = (event) => {
 	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 	mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -457,15 +553,17 @@ const toggleWall = (event) => {
 
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------
+// This part just runs various checks for the toggleWall function
 let wall = null;
 let mouseDown = 0;
-
 document.body.onmousedown = function(event) {
 	if (event.button === 0) {
 		++mouseDown;
 		wall = toggleWall(event);
 	}
 }
+
 document.body.onmouseup = function(event) {
 	if (event.button === 0) {
 		--mouseDown;
@@ -489,3 +587,127 @@ document.addEventListener('mousemove', function(event) {
 		wall = toggleWall(event);
 	}
 }, false);
+
+//------------------------------------------------------------------------------------------------------------------------------------
+
+
+//     _      _        ____    ___    ____
+//    / \    | |      / ___|  / _ \  / ___|
+//   / _ \   | |     | |  _  | | | | \___ \
+//  / ___ \  | |___  | |_| | | |_| |  ___) |
+// /_/   \_\ |_____|  \____|  \___/  |____/
+
+
+// Directions it the program can go
+const dirs = [
+    [0, 1],
+    [1, 0],
+    [-1, 0],
+    [0, -1]
+];
+// Queue for BFS
+let queue = [];
+
+//------------------------------------------------------------------------------------------------------------------------------------
+
+// Resets the everythings needed for the algos
+const reset = (boardPath, startCoor) => {
+	queue = [startCoor];
+	boardPath[startCoor[0]][startCoor[1]].push(startCoor);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------
+// Runs DFS (Depth First Search) recursively - not the most efficient, but needed for it to update in real time
+const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, delay) => {
+	if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
+		console.log('TARGET WAS FOUND');
+		console.log(boardPath[node[0]][node[1]]);
+		path = boardPath[node[0]][node[1]];
+		visualizePath();
+		return boardPath[node[0]][node[1]];
+	}
+
+	if (!(node[0] === startCoor[0] && node[1] == startCoor[1])) {
+		board[(rows * node[1]) + node[0]].material = new THREE.MeshBasicMaterial({
+			color: 0x32c6db
+		});
+	}
+
+	if (boardCoor[node[0]][node[1]] === 0) {
+		boardCoor[node[0]][node[1]] = 2;
+		let ret;
+		for (let dir of dirs) {
+			let neighbor;
+			try {
+				neighbor = boardCoor[node[0] + dir[0]][node[1] + dir[1]];
+			} catch (err) {
+				continue;
+			}
+			if (neighbor === 0) {
+				let nextCoor = [(node[0] + dir[0]), (node[1] + dir[1])];
+				boardPath[nextCoor[0]][nextCoor[1]] = boardPath[node[0]][node[1]].concat([nextCoor]);
+				ret = setTimeout(() => {
+					let _ret = dfs(board, boardCoor, boardPath, nextCoor, startCoor, targetCoor, rows, delay);
+					if (_ret) {
+						return _ret;
+					}
+				}, delay);
+				return ret;
+
+
+			}
+		}
+	}
+	console.log('TARGET WAS NOT FOUND');
+	return null;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------
+// Runs BFS (Breadth First Search) recursively - not the most efficient, but needed for it to update in real time
+const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) => {
+	if (!queue.length) {
+		console.log('TARGET WAS NOT FOUND');
+		return null;
+	}
+	let node = queue.pop();
+
+	if (boardCoor[node[0]][node[1]] === 0) {
+		boardCoor[node[0]][node[1]] = 2;
+		if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
+			console.log('TARGET WAS FOUND');
+			console.log(boardPath[node[0]][node[1]]);
+			path = boardPath[node[0]][node[1]];
+			visualizePath();
+			return boardPath[node[0]][node[1]];
+		}
+
+		if (!(node[0] === startCoor[0] && node[1] == startCoor[1])) {
+			board[(rows * node[1]) + node[0]].material = new THREE.MeshBasicMaterial({
+				color: 0x32c6db
+			});
+		}
+		for (let dir of dirs) {
+			let neighbor;
+			try {
+				neighbor = boardCoor[node[0] + dir[0]][node[1] + dir[1]];
+			} catch (err) {
+				continue;
+			}
+			if (neighbor === 0) {
+				let nextCoor = [(node[0] + dir[0]), (node[1] + dir[1])]
+				boardPath[nextCoor[0]][nextCoor[1]] = boardPath[node[0]][node[1]].concat([nextCoor]);
+				queue.unshift(nextCoor);
+			}
+		}
+	}
+
+	let ret = setTimeout(() => {
+		let _ret = bfs(board, boardCoor, boardPath, startCoor, targetCoor, rows, delay);
+		if (_ret) {
+			return _ret;
+		}
+	}, delay - 100);
+	return ret;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------
