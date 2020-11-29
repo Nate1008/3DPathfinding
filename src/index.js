@@ -342,6 +342,8 @@ const visualizePath = () => {
 	pathCounter++;
 	if (pathCounter + 1 >= path.length) {
 		progress = false;
+		pathCounter = 0;
+		path = null;
 		return;
 	}
 
@@ -351,7 +353,7 @@ const visualizePath = () => {
 	});
 	setTimeout(() => {
 		visualizePath();
-	}, 250);
+	}, 100);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -361,12 +363,12 @@ const visualizeDFS = () => {
 		return;
 	}
 	getBoard();
-	clearType(visited);
+	clearPath();
 	reset(boardPath, startCoor);
 	if (node.Delay === 0) {
 		quick_dfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows);
 	} else {
-		dfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows, node.Delay * 1000)
+		dfs(board, boardCoor, boardPath, startCoor, startCoor, targetCoor, node.Rows, node.Delay * 1000)
 	}
 	progress = true;
 }
@@ -378,7 +380,7 @@ const visualizeBFS = () => {
 		return;
 	}
 	getBoard();
-	clearType(visited);
+	clearPath();
 	reset(boardPath, startCoor);
 	if (node.Delay === 0) {
 		quick_bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows);
@@ -679,7 +681,7 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, del
 
 //------------------------------------------------------------------------------------------------------------------------------------
 // Runs DFS (Depth First Search) - much faster, but doesn't update in real time
-const quick_dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows) => {
+const quick_dfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows) => {
 	while (stack.length) {
 		let node = stack.pop();
 		if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
