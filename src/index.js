@@ -6,6 +6,7 @@
 
 
 
+
 import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.d.js';
 import {
@@ -350,7 +351,7 @@ const visualizePath = () => {
 	});
 	setTimeout(() => {
 		visualizePath();
-	}, (node.Delay * 1000));
+	}, 250);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -362,7 +363,11 @@ const visualizeDFS = () => {
 	getBoard();
 	clearType(visited);
 	reset(boardPath, startCoor);
-	dfs(board, boardCoor, boardPath, startCoor, startCoor, targetCoor, node.Rows, node.Delay * 1000);
+	if (node.Delay === 0) {
+		quick_dfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows);
+	} else {
+		dfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows, node.Delay * 1000)
+	}
 	progress = true;
 }
 
@@ -375,7 +380,11 @@ const visualizeBFS = () => {
 	getBoard();
 	clearType(visited);
 	reset(boardPath, startCoor);
-	bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows, node.Delay * 1000);
+	if (node.Delay === 0) {
+		quick_bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows);
+	} else {
+		bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows, node.Delay * 1000)
+	}
 	progress = true;
 }
 
@@ -406,7 +415,7 @@ options.add(controls, "autoRotateSpeed", 0, 5, 0.01);
 options.add(controls, "zoomSpeed", 0, 5, 0.01);
 options.add(controls, "rotateSpeed", 0, 5, 0.01);
 options.add(node, "Rows", 10, 40, 10);
-options.add(node, "Delay", 0.1, 1.5, 0.05);
+options.add(node, "Delay", 0, 1.5, 0.05);
 
 //------------------------------------------------------------------------------------------------------------------------------------
 //Animate runs every frame - runs checks and updates stuff
@@ -538,6 +547,9 @@ const click = (cube, type) => {
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
 const toggleWall = (event) => {
+	if (progress) {
+		return null;
+	}
 	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 	mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -607,12 +619,15 @@ const dirs = [
 ];
 // Queue for BFS
 let queue = [];
+// Stack for Quick DFS
+let stack = [];
 
 //------------------------------------------------------------------------------------------------------------------------------------
 
 // Resets the everythings needed for the algos
 const reset = (boardPath, startCoor) => {
 	queue = [startCoor];
+	stack = [startCoor];
 	boardPath[startCoor[0]][startCoor[1]].push(startCoor);
 }
 
@@ -663,6 +678,45 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, del
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
+// Runs DFS (Depth First Search) - much faster, but doesn't update in real time
+const quick_dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows) => {
+	while (stack.length) {
+		let node = stack.pop();
+		if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
+			console.log('TARGET WAS FOUND');
+			console.log(boardPath[node[0]][node[1]]);
+			path = boardPath[node[0]][node[1]];
+			visualizePath();
+			return boardPath[node[0]][node[1]];
+		}
+
+		if (boardCoor[node[0]][node[1]] === 0) {
+			boardCoor[node[0]][node[1]] = 2;
+			if (!(node[0] === startCoor[0] && node[1] == startCoor[1])) {
+				board[(rows * node[1]) + node[0]].material = new THREE.MeshBasicMaterial({
+					color: 0x32c6db
+				});
+			}
+			for (let dir of dirs) {
+				let neighbor;
+				try {
+					neighbor = boardCoor[node[0] + dir[0]][node[1] + dir[1]];
+				} catch (err) {
+					continue;
+				}
+				if (neighbor === 0) {
+					let nextCoor = [(node[0] + dir[0]), (node[1] + dir[1])]
+					stack.push(nextCoor);
+					boardPath[nextCoor[0]][nextCoor[1]] = boardPath[node[0]][node[1]].concat([nextCoor]);
+				}
+			}
+		}
+	}
+	console.log('TARGET WAS NOT FOUND');
+	return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------
 // Runs BFS (Breadth First Search) recursively - not the most efficient, but needed for it to update in real time
 const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) => {
 	if (!queue.length) {
@@ -708,6 +762,46 @@ const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) =>
 		}
 	}, delay - 100);
 	return ret;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------
+// Runs BFS (Breadth First Search) - much faster, but doesn't update in real time
+const quick_bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows) => {
+	while (queue.length) {
+		let node = queue.pop()
+
+		if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
+			console.log('TARGET WAS FOUND');
+			console.log(boardPath[node[0]][node[1]]);
+			path = boardPath[node[0]][node[1]];
+			visualizePath();
+			return boardPath[node[0]][node[1]];
+		}
+
+		if (boardCoor[node[0]][node[1]] === 0) {
+			boardCoor[node[0]][node[1]] = 2;
+			if (!(node[0] === startCoor[0] && node[1] == startCoor[1])) {
+				board[(rows * node[1]) + node[0]].material = new THREE.MeshBasicMaterial({
+					color: 0x32c6db
+				});
+			}
+			for (let dir of dirs) {
+				let neighbor;
+				try {
+					neighbor = boardCoor[node[0] + dir[0]][node[1] + dir[1]];
+				} catch (err) {
+					continue;
+				}
+				if (neighbor === 0) {
+					let nextCoor = [(node[0] + dir[0]), (node[1] + dir[1])]
+					boardPath[nextCoor[0]][nextCoor[1]] = boardPath[node[0]][node[1]].concat([nextCoor]);
+					queue.unshift(nextCoor);
+				}
+			}
+		}
+	}
+	console.log('TARGET WAS NOT FOUND');
+	return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
