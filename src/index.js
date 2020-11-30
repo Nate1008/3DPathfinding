@@ -414,7 +414,6 @@ algos.add(pathfinding, "visualizeBFS");
 //Tertiary GUI - The (customizable) Controls
 const options = gui.addFolder("Controls");
 options.add(controls, "autoRotate");
-options.add(controls, "autoRotateSpeed", 0, 5, 0.01);
 options.add(controls, "zoomSpeed", 0, 5, 0.01);
 options.add(controls, "rotateSpeed", 0, 5, 0.01);
 options.add(node, "Rows", 10, 40, 10);
@@ -476,6 +475,13 @@ labels[0].textContent = "Selected Node";
 labels[1].textContent = "Clear All";
 labels[2].textContent = "Clear Walls";
 labels[3].textContent = "Clear Path";
+labels[4].textContent = "Visualize DFS";
+labels[5].textContent = "Visualize BFS";
+labels[6].textContent = "Auto Rotate";
+labels[7].textContent = "Zoom Speed";
+labels[8].textContent = "Rotate Speed";
+
+
 
 //------------------------------------------------------------------------------------------------------------------------------------
 //Runs when user clicks on tile - changes it to selected node
