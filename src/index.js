@@ -27,7 +27,7 @@ let boardPath = [];
 let rows = 5;
 let cols = rows;
 let progress = false;
-let path = null;
+let path = [];
 
 //CONSTS
 const width = 1.5;
@@ -338,12 +338,12 @@ let node = {
 // Shows the path recursively (so it updates in real time)
 let pathCounter = 0;
 const visualizePath = () => {
-	console.log('WORKS')
 	pathCounter++;
 	if (pathCounter + 1 >= path.length) {
+		console.log('WORKS');
 		progress = false;
 		pathCounter = 0;
-		path = null;
+		path = [];
 		return;
 	}
 
@@ -368,9 +368,9 @@ const visualizeDFS = () => {
 	if (node.Delay === 0) {
 		quick_dfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows);
 	} else {
-		dfs(board, boardCoor, boardPath, startCoor, startCoor, targetCoor, node.Rows, node.Delay * 1000)
+		dfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows, node.Delay * 1000);
+		progress = true;
 	}
-	progress = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -385,9 +385,10 @@ const visualizeBFS = () => {
 	if (node.Delay === 0) {
 		quick_bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows);
 	} else {
-		bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows, node.Delay * 1000)
+		bfs(board, boardCoor, boardPath, startCoor, targetCoor, node.Rows, node.Delay * 1000);
+		progress = true;
 	}
-	progress = true;
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -612,16 +613,17 @@ document.addEventListener('mousemove', function(event) {
 // /_/   \_\ |_____|  \____|  \___/  |____/
 
 
-// Directions it the program can go
+// Directions the program can go
 const dirs = [
     [0, 1],
     [1, 0],
     [-1, 0],
     [0, -1]
 ];
+
 // Queue for BFS
 let queue = [];
-// Stack for Quick DFS
+// Stack for DFS
 let stack = [];
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -635,7 +637,15 @@ const reset = (boardPath, startCoor) => {
 
 //------------------------------------------------------------------------------------------------------------------------------------
 // Runs DFS (Depth First Search) recursively - not the most efficient, but needed for it to update in real time
-const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, delay) => {
+const dfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) => {
+	if (!stack.length) {
+		console.log('TARGET WAS NOT FOUND');
+		visualizePath();
+		return null;
+	}
+
+	let node = stack.pop();
+
 	if (node[0] == targetCoor[0] && node[1] == targetCoor[1]) {
 		console.log('TARGET WAS FOUND');
 		console.log(boardPath[node[0]][node[1]]);
@@ -652,7 +662,6 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, del
 
 	if (boardCoor[node[0]][node[1]] === 0) {
 		boardCoor[node[0]][node[1]] = 2;
-		let ret;
 		for (let dir of dirs) {
 			let neighbor;
 			try {
@@ -663,24 +672,23 @@ const dfs = (board, boardCoor, boardPath, node, startCoor, targetCoor, rows, del
 			if (neighbor === 0) {
 				let nextCoor = [(node[0] + dir[0]), (node[1] + dir[1])];
 				boardPath[nextCoor[0]][nextCoor[1]] = boardPath[node[0]][node[1]].concat([nextCoor]);
-				ret = setTimeout(() => {
-					let _ret = dfs(board, boardCoor, boardPath, nextCoor, startCoor, targetCoor, rows, delay);
-					if (_ret) {
-						return _ret;
-					}
-				}, delay);
-				return ret;
-
-
+				stack.push(nextCoor);
 			}
 		}
 	}
-	console.log('TARGET WAS NOT FOUND');
-	return null;
+
+	let ret = setTimeout(() => {
+		let _ret = dfs(board, boardCoor, boardPath, startCoor, targetCoor, rows, delay);
+		if (_ret) {
+			return _ret;
+		}
+	}, delay);
+	return ret;
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
-// Runs DFS (Depth First Search) - much faster, but doesn't update in real time
+// Runs DFS (Depth First Search) - much faster, but doesn't update in real time (activates when delay is 0)
 const quick_dfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows) => {
 	while (stack.length) {
 		let node = stack.pop();
@@ -714,8 +722,9 @@ const quick_dfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows) => 
 			}
 		}
 	}
+	visualizePath();
 	console.log('TARGET WAS NOT FOUND');
-	return;
+	return null;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -723,6 +732,7 @@ const quick_dfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows) => 
 const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) => {
 	if (!queue.length) {
 		console.log('TARGET WAS NOT FOUND');
+		visualizePath();
 		return null;
 	}
 	let node = queue.pop();
@@ -767,7 +777,7 @@ const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) =>
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
-// Runs BFS (Breadth First Search) - much faster, but doesn't update in real time
+// Runs BFS (Breadth First Search) - much faster, but doesn't update in real time (activates when delay is 0)
 const quick_bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows) => {
 	while (queue.length) {
 		let node = queue.pop()
@@ -802,8 +812,9 @@ const quick_bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows) => 
 			}
 		}
 	}
+	visualizePath();
 	console.log('TARGET WAS NOT FOUND');
-	return;
+	return null;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
