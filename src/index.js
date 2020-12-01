@@ -1,8 +1,9 @@
-//  _____   ____    ____      _     _____   _   _   _____   ___   _   _   ____    ___   _   _    ____
-// |___ /  |  _ \  |  _ \    / \   |_   _| | | | | |  ___| |_ _| | \ | | |  _ \  |_ _| | \ | |  / ___|
-//   |_ \  | | | | | |_) |  / _ \    | |   | |_| | | |_     | |  |  \| | | | | |  | |  |  \| | | |  _
-//  ___) | | |_| | |  __/  / ___ \   | |   |  _  | |  _|    | |  | |\  | | |_| |  | |  | |\  | | |_| |
-// |____/  |____/  |_|    /_/   \_\  |_|   |_| |_| |_|     |___| |_| \_| |____/  |___| |_| \_|  \____|
+// ┏━━━┓┏━━━┓┏━━━┓┏━━━┓┏━━━━┓┏┓ ┏┓┏━━━┓┏━━┓┏━┓ ┏┓┏━━━┓┏━━┓┏━┓ ┏┓┏━━━┓
+// ┃┏━┓┃┗┓┏┓┃┃┏━┓┃┃┏━┓┃┃┏┓┏┓┃┃┃ ┃┃┃┏━━┛┗┫┣┛┃┃┗┓┃┃┗┓┏┓┃┗┫┣┛┃┃┗┓┃┃┃┏━┓┃
+// ┗┛┏┛┃ ┃┃┃┃┃┗━┛┃┃┃ ┃┃┗┛┃┃┗┛┃┗━┛┃┃┗━━┓ ┃┃ ┃┏┓┗┛┃ ┃┃┃┃ ┃┃ ┃┏┓┗┛┃┃┃ ┗┛
+// ┏┓┗┓┃ ┃┃┃┃┃┏━━┛┃┗━┛┃  ┃┃  ┃┏━┓┃┃┏━━┛ ┃┃ ┃┃┗┓┃┃ ┃┃┃┃ ┃┃ ┃┃┗┓┃┃┃┃┏━┓
+// ┃┗━┛┃┏┛┗┛┃┃┃   ┃┏━┓┃  ┃┃  ┃┃ ┃┃┃┃   ┏┫┣┓┃┃ ┃┃┃┏┛┗┛┃┏┫┣┓┃┃ ┃┃┃┃┗┻━┃
+// ┗━━━┛┗━━━┛┗┛   ┗┛ ┗┛  ┗┛  ┗┛ ┗┛┗┛   ┗━━┛┗┛ ┗━┛┗━━━┛┗━━┛┗┛ ┗━┛┗━━━┛
 
 
 
@@ -24,6 +25,7 @@ let startCoor = [];
 let targetCoor = [];
 let boardCoor = [];
 let boardPath = [];
+let boardWeight = [];
 let rows = 5;
 let cols = rows;
 let progress = false;
@@ -60,13 +62,6 @@ const target = new THREE.Mesh(
 	new THREE.BoxGeometry(width, height, width),
 	new THREE.MeshBasicMaterial({
 		color: 0xff2020
-	})
-);
-
-const weight = new THREE.Mesh(
-	new THREE.BoxGeometry(width, height + 1, width),
-	new THREE.MeshBasicMaterial({
-		color: 0x02abed
 	})
 );
 
@@ -172,11 +167,12 @@ scene.add(group);
 
 //------------------------------------------------------------------------------------------------------------------------------------
 
-//   ____   _   _   ___
-//  / ___| | | | | |_ _|
-// | |  _  | | | |  | |
-// | |_| | | |_| |  | |
-//  \____|  \___/  |___|
+// ┏━━━┓┏┓ ┏┓┏━━┓
+// ┃┏━┓┃┃┃ ┃┃┗┫┣┛
+// ┃┃ ┗┛┃┃ ┃┃ ┃┃
+// ┃┃┏━┓┃┃ ┃┃ ┃┃
+// ┃┗┻━┃┃┗━┛┃┏┫┣┓
+// ┗━━━┛┗━━━┛┗━━┛
 
 //------------------------------------------------------------------------------------------------------------------------------------
 
@@ -200,16 +196,16 @@ controls.mouseButtons = {
 const toggleNode = (x) => {
 	x = !x ? 1 : x;
 	let cs = document.getElementsByClassName("c")[0];
-	let labels = ["Start", "Target", "Wall", "Weighted"];
+	let labels = ["Start", "Target", "Wall"];
 	let counter = 0;
-	for (let i = 0; i < 4; i++) {
+	for (let i = 0; i < 3; i++) {
 		if (labels[i] + " Node" == cs.textContent) {
 			counter = i;
 			counter += x;
 			break;
 		}
 	}
-	cs.textContent = labels[counter % 4] + " Node";
+	cs.textContent = labels[counter % 3] + " Node";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -253,7 +249,6 @@ const clearWall = () => {
 		return;
 	}
 	clearType(build);
-	clearType(weight);
 	let cs = document.getElementsByClassName("c")[0];
 	cs.textContent = "Wall Node";
 }
@@ -395,11 +390,12 @@ const visualizeBFS = () => {
 // Pathfinding Object for GUI (The GUI API uses/needs objects)
 let pathfinding = {
 	visualizeDFS: visualizeDFS,
-	visualizeBFS: visualizeBFS
+	visualizeBFS: visualizeBFS,
 }
 
 //Primary GUI
 const gui = new dat.GUI();
+gui.width = 250;
 gui.add(node, "toggle");
 gui.add(node, "clear");
 gui.add(node, "clearWall");
@@ -444,11 +440,12 @@ animate();
 
 //------------------------------------------------------------------------------------------------------------------------------------
 
-//  _____  __     __  _____   _   _   _____   ____
-// | ____| \ \   / / | ____| | \ | | |_   _| / ___|
-// |  _|    \ \ / /  |  _|   |  \| |   | |   \___ \
-// | |___    \ V /   | |___  | |\  |   | |    ___) |
-// |_____|    \_/    |_____| |_| \_|   |_|   |____/
+// ┏━━━┓┏┓  ┏┓┏━━━┓┏━┓ ┏┓┏━━━━┓┏━━━┓
+// ┃┏━━┛┃┗┓┏┛┃┃┏━━┛┃┃┗┓┃┃┃┏┓┏┓┃┃┏━┓┃
+// ┃┗━━┓┗┓┃┃┏┛┃┗━━┓┃┏┓┗┛┃┗┛┃┃┗┛┃┗━━┓
+// ┃┏━━┛ ┃┗┛┃ ┃┏━━┛┃┃┗┓┃┃  ┃┃  ┗━━┓┃
+// ┃┗━━┓ ┗┓┏┛ ┃┗━━┓┃┃ ┃┃┃  ┃┃  ┃┗━┛┃
+// ┗━━━┛  ┗┛  ┗━━━┛┗┛ ┗━┛  ┗┛  ┗━━━┛
 
 //------------------------------------------------------------------------------------------------------------------------------------
 
@@ -491,9 +488,6 @@ const click = (cube, type) => {
 		case build.material.color.getHex():
 			cubeType = "Wall Node";
 			break;
-		case weight.material.color.getHex():
-			cubeType = "Weighted Node";
-			break;
 		case start.material.color.getHex():
 			cubeType = "Start Node";
 			break;
@@ -523,11 +517,6 @@ const click = (cube, type) => {
 			outlines[r + c].position.y = 0;
 			// toggleNode();
 		} else {
-			if (type === "Wall Node") {
-				cube.material = build.material;
-			} else if (type === "Weighted Node") {
-				cube.material = weight.material;
-			}
 			const rand = Math.floor(Math.random() * 3.5) + 2.5;
 			cube.scale.y = rand;
 			cube.position.y = 1;
@@ -595,9 +584,11 @@ document.body.onmouseup = function(event) {
 document.onkeydown = function(e) {
 	switch (e.keyCode) {
 		case 37:
-			toggleNode(3)
+			console.log('LEFT');
+			toggleNode(2)
 			break;
 		case 39:
+			console.log('RIGHT');
 			toggleNode()
 			break;
 	}
@@ -612,12 +603,14 @@ document.addEventListener('mousemove', function(event) {
 //------------------------------------------------------------------------------------------------------------------------------------
 
 
-//     _      _        ____    ___    ____
-//    / \    | |      / ___|  / _ \  / ___|
-//   / _ \   | |     | |  _  | | | | \___ \
-//  / ___ \  | |___  | |_| | | |_| |  ___) |
-// /_/   \_\ |_____|  \____|  \___/  |____/
+// ┏━━━┓┏┓   ┏━━━┓┏━━━┓┏━━━┓
+// ┃┏━┓┃┃┃   ┃┏━┓┃┃┏━┓┃┃┏━┓┃
+// ┃┃ ┃┃┃┃   ┃┃ ┗┛┃┃ ┃┃┃┗━━┓
+// ┃┗━┛┃┃┃ ┏┓┃┃┏━┓┃┃ ┃┃┗━━┓┃
+// ┃┏━┓┃┃┗━┛┃┃┗┻━┃┃┗━┛┃┃┗━┛┃
+// ┗┛ ┗┛┗━━━┛┗━━━┛┗━━━┛┗━━━┛
 
+//------------------------------------------------------------------------------------------------------------------------------------
 
 // Directions the program can go
 const dirs = [
@@ -633,13 +626,13 @@ let queue = [];
 let stack = [];
 
 //------------------------------------------------------------------------------------------------------------------------------------
-
 // Resets the everythings needed for the algos
 const reset = (boardPath, startCoor) => {
 	queue = [startCoor];
 	stack = [startCoor];
 	boardPath[startCoor[0]][startCoor[1]].push(startCoor);
 }
+
 
 //------------------------------------------------------------------------------------------------------------------------------------
 // Runs DFS (Depth First Search) recursively - not the most efficient, but needed for it to update in real time
@@ -822,5 +815,4 @@ const quick_bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows) => 
 	console.log('TARGET WAS NOT FOUND');
 	return null;
 }
-
 //------------------------------------------------------------------------------------------------------------------------------------
