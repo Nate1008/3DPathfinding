@@ -305,6 +305,8 @@ const resizeBoard = (newRows) => {
 	if (progress) {
 		return;
 	}
+	beacontarget.position.set(1000, 1000, 1000);
+	beaconstart.position.set(1000, 1000, 1000);
 	boardCoor = [];
 	outlines = [];
 	board = [];
