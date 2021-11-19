@@ -307,6 +307,7 @@ const resizeBoard = (newRows) => {
 	}
 	beacontarget.position.set(1000, 1000, 1000);
 	beaconstart.position.set(1000, 1000, 1000);
+
 	boardCoor = [];
 	outlines = [];
 	board = [];
@@ -631,18 +632,18 @@ document.body.onmouseup = function(event) {
 	}
 }
 
-document.onkeydown = function(e) {
-	switch (e.keyCode) {
-		case 37:
-			console.log('LEFT');
-			toggleNode(2)
-			break;
-		case 39:
-			console.log('RIGHT');
-			toggleNode()
-			break;
-	}
-};
+// document.onkeydown = function(e) {
+// 	switch (e.keyCode) {
+// 		case 37:
+// 			console.log('LEFT');
+// 			toggleNode(2)
+// 			break;
+// 		case 39:
+// 			console.log('RIGHT');
+// 			toggleNode()
+// 			break;
+// 	}
+// };
 
 document.addEventListener('mousemove', function(event) {
 	if (mouseDown > 0) {
@@ -866,3 +867,9 @@ const quick_bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows) => 
 	return null;
 }
 //------------------------------------------------------------------------------------------------------------------------------------
+
+// CREATE RANDOM BOARD LAYOUTS
+
+
+
+
