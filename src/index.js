@@ -9,7 +9,7 @@
 
 
 import * as THREE from 'three';
-import Stats from 'three/examples/jsm/libs/stats.module.d.js';
+import Stats from 'three/examples/jsm/utils/stats.module.d.js';
 import {
 	OrbitControls
 } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -65,6 +65,26 @@ const target = new THREE.Mesh(
 	})
 );
 
+let beaconstart = new THREE.Mesh(
+	new THREE.BoxGeometry(width, height+5, width),
+	new THREE.MeshBasicMaterial({
+		color: 0x4fc134,
+		opacity: 0.2,
+		transparent: true,
+		side: THREE.DoubleSide,
+	})
+);
+
+let beacontarget = new THREE.Mesh(
+	new THREE.BoxGeometry(width, height+5, width),
+	new THREE.MeshBasicMaterial({
+		color: 0xff2020,
+		opacity: 0.2,
+		transparent: true,
+		side: THREE.DoubleSide,
+	})
+);
+
 const visited = new THREE.Mesh(
 	new THREE.BoxGeometry(width, height, width),
 	new THREE.MeshBasicMaterial({
@@ -111,22 +131,33 @@ const getBoard = () => {
 
 //------------------------------------------------------------------------------------------------------------------------------------
 //SETING UP THE SCENE - BOILERPLATE
+
+const renderer = new THREE.WebGLRenderer({
+	antialias: true,
+	alpha: true
+});
+renderer.setSize(window.innerWidth + 10000, window.innerHeight + 10000);
+document.body.appendChild(renderer.domElement);
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 30, 0);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-const renderer = new THREE.WebGLRenderer({
-	antialias: true
-});
-renderer.setClearColor(0xffffff, 1);
-renderer.setSize(window.innerWidth + 10000, window.innerHeight + 10000);
-document.body.appendChild(renderer.domElement);
+// renderer.setClearColor(0xffffff, 0);
+scene.background = new THREE.Color(0xffffff);
 
 const stats = Stats();
 document.body.appendChild(stats.dom);
 
 //CREATING BOARD (3E)
+scene.add(beaconstart);
+scene.add(beacontarget);
+
+beaconstart.position.set(1000, 1000, 1000);
+beacontarget.position.set(1000, 1000, 1000);
+
+
 for (let r = -rows; r < rows; r++) {
 	boardCoor.push([]);
 	boardPath.push([]);
@@ -196,16 +227,16 @@ controls.mouseButtons = {
 const toggleNode = (x) => {
 	x = !x ? 1 : x;
 	let cs = document.getElementsByClassName("c")[0];
-	let labels = ["Start", "Target", "Wall"];
+	let labels = ["Start Node", "Target Node", "Wall Node", "Eraser"];
 	let counter = 0;
-	for (let i = 0; i < 3; i++) {
-		if (labels[i] + " Node" == cs.textContent) {
+	for (let i = 0; i < 4; i++) {
+		if (labels[i] == cs.textContent) {
 			counter = i;
 			counter += x;
 			break;
 		}
 	}
-	cs.textContent = labels[counter % 3] + " Node";
+	cs.textContent = labels[counter % 4];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -214,13 +245,12 @@ const clearAll = () => {
 	if (progress) {
 		return;
 	}
-	for (let i = 0; i < board.length; i++) {
-		board[i].scale.y = 1;
-		board[i].material = ground.material;
-		board[i].position.y = 0;
-		outlines[i].scale.y = 1.05;
-		outlines[i].position.y = 0;
-	}
+	clearType(build);
+	clearType(start);
+	clearType(target);
+	clearType(_path);
+	clearType(visited);
+
 	let cs = document.getElementsByClassName("c")[0];
 	cs.textContent = "Start Node";
 }
@@ -233,6 +263,12 @@ const clearType = (type) => {
 	}
 	for (let i = 0; i < board.length; i++) {
 		if (board[i].material.color.getHex() === type.material.color.getHex()) {
+			if (type == start) {
+				beaconstart.position.set(1000, 1000, 1000);
+			}
+			if (type == target) {
+				beacontarget.position.set(1000, 1000, 1000);
+			}
 			board[i].scale.y = 1;
 			board[i].material = ground.material;
 			board[i].position.y = 0;
@@ -301,7 +337,7 @@ const resizeBoard = (newRows) => {
 
 			cube.position.set(r * (width + 0.05), 0, c * (width + 0.05));
 			outline.position.set(r * (width + 0.05), 0, c * (width + 0.05));
-			outline.scale.multiplyScalar(1.05);
+			outline.scale.multiplyScalar(1.025);
 
 			shape.add(cube);
 			shape.add(outline);
@@ -499,38 +535,50 @@ const click = (cube, type) => {
 	}
 	let r = Math.round((2 * rows) * (rows + (cube.position.x / (width + 0.05))));
 	let c = Math.round(cols + (cube.position.z / (width + 0.05)));
-	if (cube.material.color.getHex() === ground.material.color.getHex() || cubeType !== type) {
-		if (type === "Start Node") {
-			clearType(start);
-			cube.material = start.material;
-			cube.scale.y = 1;
-			cube.position.y = 0;
-			outlines[r + c].scale.y = 1.05;
-			outlines[r + c].position.y = 0;
-			// toggleNode();
-		} else if (type === "Target Node") {
-			clearType(target);
-			cube.material = target.material;
-			cube.scale.y = 1;
-			cube.position.y = 0;
-			outlines[r + c].scale.y = 1.05;
-			outlines[r + c].position.y = 0;
-			// toggleNode();
-		} else {
-			const rand = Math.floor(Math.random() * 3.5) + 2.5;
-			cube.scale.y = rand;
-			cube.position.y = 1;
-			outlines[r + c].scale.y = rand;
-			outlines[r + c].position.y = 1;
-		}
+	if (cubeType == type) return;
+	if (type === "Start Node") {
+		clearType(start);
+		cube.material = start.material;
+		beaconstart.position.set(cube.position.x, cube.position.y+2.5, cube.position.z);
+		cube.scale.y = 1;
+		cube.position.y = 0;
+		outlines[r + c].scale.y = 1.025;
+		outlines[r + c].position.y = 0;
+		// toggleNode();
+	} else if (type === "Target Node") {
+		clearType(target);
+		cube.material = target.material;
+		beacontarget.position.set(cube.position.x, cube.position.y+2.5, cube.position.z);
+		cube.scale.y = 1;
+		cube.position.y = 0;
+		outlines[r + c].scale.y = 1.025;
+		outlines[r + c].position.y = 0;
+		// toggleNode();
+	} else if (type === "Wall Node") {
+		let rand = Math.floor(Math.random() * 3) + 2.5;
+		let level = ((rand-1)*height)/2
+		cube.scale.y = rand;
+		cube.position.y = level;
+		cube.material = build.material;
+		outlines[r + c].scale.y = rand;
+		outlines[r + c].position.y = level;
 	} else {
 		cube.material = ground.material;
 		cube.scale.y = 1;
 		cube.position.y = 0;
-		outlines[r + c].scale.y = 1.05;
+		outlines[r + c].scale.y = 1.025;
 		outlines[r + c].position.y = 0;
 	}
+	if (type !== cubeType) {
+		if (cubeType === "Start Node") {
+			beaconstart.position.set(1000, 1000, 1000);
+		}
+		if (cubeType === "Target Node") {
+			beacontarget.position.set(1000, 1000, 1000);
+		}
+	}
 	board[r + c] = cube;
+	clearPath();
 
 	//    if (cubeType === "Start Node") {
 	//        cs.textContent = cubeType;
@@ -771,7 +819,7 @@ const bfs = (board, boardCoor, boardPath, startCoor, targetCoor, rows, delay) =>
 		if (_ret) {
 			return _ret;
 		}
-	}, delay - 100);
+	}, delay);
 	return ret;
 }
 
